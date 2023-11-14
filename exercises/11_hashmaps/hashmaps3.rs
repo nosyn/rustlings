@@ -22,6 +22,26 @@ struct Team {
     goals_conceded: u8,
 }
 
+fn upsert_table_scores(scores: &mut HashMap<String, Team>, team_name: String, team_score: Team) {
+    match scores.get(&team_name) {
+        Some(score) => scores.insert(
+            team_name,
+            Team {
+                goals_scored: score.goals_scored + team_score.goals_scored,
+                goals_conceded: score.goals_conceded + team_score.goals_conceded,
+            },
+        ),
+        _ => scores.insert(
+            team_name,
+            Team {
+                goals_scored: team_score.goals_scored,
+                goals_conceded: team_score.goals_conceded,
+            },
+        ),
+    };
+}
+
+// fn insert_team_scores(scores: &HashMap<String, Team>, team_name: &str, team_goals: &str,
 fn build_scores_table(results: String) -> HashMap<String, Team> {
     // The name of the team is the key and its associated struct is the value.
     let mut scores: HashMap<String, Team> = HashMap::new();
@@ -38,23 +58,58 @@ fn build_scores_table(results: String) -> HashMap<String, Team> {
         // goals scored by team_2 will be the number of goals conceded by
         // team_1.
 
-        let team_1 = scores.entry(team_1_name.clone()).or_insert(Team {
-            name: team_1_name,
-            goals_scored: 0,
-            goals_conceded: 0,
-        });
-        team_1.goals_scored += team_1_score;
-        team_1.goals_conceded += team_2_score;
+        upsert_table_scores(
+            &mut scores,
+            team_1_name,
+            Team {
+                goals_scored: team_1_score,
+                goals_conceded: team_2_score,
+            },
+        );
 
-        let team_2 = scores.entry(team_2_name.clone()).or_insert(Team {
-            name: team_2_name,
-            goals_scored: 0,
-            goals_conceded: 0,
-        });
-        team_2.goals_scored += team_2_score;
-        team_2.goals_conceded += team_1_score;
+        upsert_table_scores(
+            &mut scores,
+            team_2_name,
+            Team {
+                goals_scored: team_2_score,
+                goals_conceded: team_1_score,
+            },
+        );
+
+        // match scores.get(&team_1_name) {
+        //     Some(score) => scores.insert(
+        //         team_1_name,
+        //         Team {
+        //             goals_scored: score.goals_scored + team_1_score,
+        //             goals_conceded: score.goals_conceded + team_2_score,
+        //         },
+        //     ),
+        //     _ => scores.insert(
+        //         team_1_name,
+        //         Team {
+        //             goals_scored: team_1_score,
+        //             goals_conceded: team_2_score,
+        //         },
+        //     ),
+        // };
+
+        // match scores.get(&team_2_name) {
+        //     Some(score) => scores.insert(
+        //         team_2_name,
+        //         Team {
+        //             goals_scored: score.goals_scored + team_2_score,
+        //             goals_conceded: score.goals_conceded + team_1_score,
+        //         },
+        //     ),
+        //     _ => scores.insert(
+        //         team_2_name,
+        //         Team {
+        //             goals_scored: team_2_score,
+        //             goals_conceded: team_1_score,
+        //         },
+        //     ),
+        // };
     }
-
     scores
 }
 
